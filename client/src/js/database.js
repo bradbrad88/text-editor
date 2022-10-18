@@ -1,21 +1,34 @@
-import { openDB } from 'idb';
+import { openDB } from "idb";
+
+const DB = "jate";
 
 const initdb = async () =>
-  openDB('jate', 1, {
+  openDB(DB, 1, {
     upgrade(db) {
-      if (db.objectStoreNames.contains('jate')) {
-        console.log('jate database already exists');
+      if (db.objectStoreNames.contains(DB)) {
+        console.log("jate database already exists");
         return;
       }
-      db.createObjectStore('jate', { keyPath: 'id', autoIncrement: true });
-      console.log('jate database created');
+      db.createObjectStore(DB, { keyPath: "id", autoIncrement: true });
+      console.log(DB + " database created");
     },
   });
 
-// TODO: Add logic to a method that accepts some content and adds it to the database
-export const putDb = async (content) => console.error('putDb not implemented');
+export const putDb = async content => {
+  const todosDb = await openDB(DB, 1);
+  const tx = todosDb.transaction(DB, "readwrite");
+  const store = tx.objectStore(DB);
+  await store.put({ id: 1, note: content });
+};
 
-// TODO: Add logic for a method that gets all the content from the database
-export const getDb = async () => console.error('getDb not implemented');
+export const getDb = async () => {
+  const todosDb = await openDB(DB, 1);
+  const tx = todosDb.transaction(DB, "readonly");
+  const store = tx.objectStore(DB);
+  const request = store.getAll();
+  const result = await request;
+  if (result.length) return result.find(item => item).note;
+  return null;
+};
 
 initdb();
